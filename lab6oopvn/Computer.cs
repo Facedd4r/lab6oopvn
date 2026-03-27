@@ -138,6 +138,137 @@ namespace lab6oopvn
         {
             return $"{Manufacturer} {ProcessorType} {OperatingSystem} {ClockSpeed}MHz RAM:{RamSize}GB Users:{Users.Count} SW:{InstalledSoftware.Count}";
         }
+
+        // Делегат для события добавления пользователя
+        public delegate void UserAddedEventHandler(object sender, string userName);
+
+        // Делегат для события замены процессора
+        public delegate void ProcessorChangedEventHandler(object sender, CpuType oldProcessor, int oldClockSpeed, CpuType newProcessor, int newClockSpeed);
+
+        // Делегат для события установки ПО
+        public delegate void SoftwareInstalledEventHandler(object sender, string softwareName);
+
+        // Делегат для события замены оперативной памяти
+        public delegate void RamUpgradedEventHandler(object sender, int oldRamSize, int newRamSize);
+
+        // Поля для хранения списков обработчиков (для реализации с add/remove)
+        private UserAddedEventHandler _userAddedHandlers;
+        private ProcessorChangedEventHandler _processorChangedHandlers;
+        private SoftwareInstalledEventHandler _softwareInstalledHandlers;
+        private RamUpgradedEventHandler _ramUpgradedHandlers;
+
+        // Событие добавления пользователя с явными add/remove (что происходит при подписке и отписке обработчиков)
+        public event UserAddedEventHandler UserAdded
+        {
+            add { _userAddedHandlers += value; } //поле-делегат
+            remove { _userAddedHandlers -= value; }  ////поле-делегат
+        }
+
+        // Событие замены процессора
+        public event ProcessorChangedEventHandler ProcessorChanged
+        {
+            add { _processorChangedHandlers += value; }
+            remove { _processorChangedHandlers -= value; }
+        }
+
+        // Событие установки ПО
+        public event SoftwareInstalledEventHandler SoftwareInstalled
+        {
+            add { _softwareInstalledHandlers += value; }
+            remove { _softwareInstalledHandlers -= value; }
+        }
+
+        // Событие замены оперативной памяти
+        public event RamUpgradedEventHandler RamUpgraded
+        {
+            add { _ramUpgradedHandlers += value; }
+            remove { _ramUpgradedHandlers -= value; }
+        }
+
+        // методы-триггеры для безопасного вызова событий
+        protected virtual void OnUserAdded(string userName)
+        {
+            // Вызов всех подписанных обработчиков через приватное поле-делегат
+            _userAddedHandlers?.Invoke(this, userName);
+        }
+
+        protected virtual void OnProcessorChanged(CpuType oldProcessor, int oldClockSpeed, CpuType newProcessor, int newClockSpeed)
+        {
+            // Вызов всех подписанных обработчиков через приватное поле-делегат
+            _processorChangedHandlers?.Invoke(this, oldProcessor, oldClockSpeed, newProcessor, newClockSpeed);
+        }
+        protected virtual void OnSoftwareInstalled(string softwareName)
+        {
+            // Вызов всех подписанных обработчиков через приватное поле-делегат
+            _softwareInstalledHandlers?.Invoke(this, softwareName);
+        }
+
+        protected virtual void OnRamUpgraded(int oldRamSize, int newRamSize)
+        {
+            // Вызов всех подписанных обработчиков через приватное поле-делегат
+            _ramUpgradedHandlers?.Invoke(this, oldRamSize, newRamSize);
+        }
+
+
+        /// <summary>
+        /// Добавление нового пользователя.
+        /// </summary>
+        /// <param name="userName">Имя пользователя.</param>
+        public void AddUser(string userName)
+        {
+            if (string.IsNullOrWhiteSpace(userName))
+                throw new ArgumentException("Имя пользователя не может быть пустым.");
+
+            Users.Add(userName);
+            // Генерация события
+            OnUserAdded(userName);
+        }
+
+        /// <summary>
+        /// Замена процессора.
+        /// </summary>
+        /// <param name="newProcessorType">Новый тип процессора.</param>
+        /// <param name="newClockSpeed">Новая тактовая частота.</param>
+        public void ChangeProcessor(CpuType newProcessorType, int newClockSpeed)
+        {
+            CpuType oldProcessorType = ProcessorType;
+            int oldClockSpeed = ClockSpeed;
+
+            ProcessorType = newProcessorType;
+            ClockSpeed = newClockSpeed;
+            // Генерация события
+            OnProcessorChanged(oldProcessorType, oldClockSpeed, newProcessorType, newClockSpeed);
+        }
+
+        /// <summary>
+        /// Установка нового ПО.
+        /// </summary>
+        /// <param name="softwareName">Название программы.</param>
+        public void InstallSoftware(string softwareName)
+        {
+            if (string.IsNullOrWhiteSpace(softwareName))
+                throw new ArgumentException("Название ПО не может быть пустым.");
+
+            InstalledSoftware.Add(softwareName);
+            // Генерация события
+            OnSoftwareInstalled(softwareName);
+        }
+
+        /// <summary>
+        /// Замена оперативной памяти.
+        /// </summary>
+        /// <param name="newRamSize">Новый объём RAM (в ГБ).</param>
+        public void UpgradeRam(int newRamSize)
+        {
+            if (newRamSize <= 0)
+                throw new ArgumentException("Объём RAM должен быть положительным.");
+
+            int oldRamSize = RamSize;
+            RamSize = newRamSize;
+            // Генерация события
+            OnRamUpgraded(oldRamSize, newRamSize);
+        }
+
     }
 
 }

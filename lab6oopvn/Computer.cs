@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace lab6oopvn
 {
-    internal class Computer : IComputer, IOverclock
+    internal class Computer : IComputer, IOverclock, ICloneable
     {
         /// <summary>
         /// // Флаг для IOverclock
@@ -269,6 +269,24 @@ namespace lab6oopvn
             OnRamUpgraded(oldRamSize, newRamSize);
         }
 
+        /// <summary>
+        /// реализация ICloneable
+        /// </summary>
+        /// <returns></returns>
+        public object Clone()
+        {
+
+            // 1. Поверхностная копия (копирует все поля – значимые типы и ссылки)
+            Computer copy = (Computer)this.MemberwiseClone();
+
+            // 2. Глубокое копирование списков – создаём новые List<string>,
+            //    копируя элементы из оригинальных списков
+            copy.InstalledSoftware = new List<string>(this.InstalledSoftware);
+            copy.Users = new List<string>(this.Users);
+
+            // 3. Возвращаем клон
+            return copy;
+        }
     }
 
 }
